@@ -18,6 +18,18 @@ const Navbar = () => {
     const { currentAddress } = useDeliveryAddress();
     const location = useLocation(); // React Router hook to access the current location
 
+    // Navigation items
+    const navItems = [
+        { path: '/about', label: 'About' },
+        { path: '/products', label: 'Menu' },
+        { path: '/portfolio', label: 'Portfolio' },
+        { path: '/client', label: 'Clients' },
+        { path: '/blog', label: 'Blog' },
+        { path: '/contact', label: 'Contact' },
+        { path: '/profile', label: 'Profile' },
+        ...(user?.role === 'admin' ? [{ path: '/admin', label: 'Admin' }] : [])
+    ];
+
 
     // Set the initial color based on the current pathname
     useEffect(() => {
@@ -68,17 +80,15 @@ const Navbar = () => {
                                 <p className=" text-2xl font-poppins"><span className={`${titleColor} text-4xl`}>H</span>ungry <span className={`text-[#fc9a30] text-4xl`}>B</span>ellies</p>
                             </Link>
                             <nav className="hidden text-lg lg:flex space-x-6">
-                                <Link to={'/'} className={`border-b-2 ${location.pathname === '/' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Home</Link>
-                                <Link to={'/about'} className={`border-b-2 ${location.pathname === '/about' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>About</Link>
-                                <Link to={'/products'} className={`border-b-2 ${location.pathname === '/products' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Menu</Link>
-                                <Link to={'/portfolio'} className={`border-b-2 ${location.pathname === '/portfolio' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Portfolio</Link>
-                                <Link to={'/client'} className={`border-b-2 ${location.pathname === '/client' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Clients</Link>
-                                <Link to={'/blog'} className={`border-b-2 ${location.pathname === '/blog' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Blog</Link>
-                                <Link to={'/contact'} className={`border-b-2 ${location.pathname === '/contact' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Contact</Link>
-                                <Link to={'/profile'} className={`border-b-2 ${location.pathname === '/profile' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Profile</Link>
-                                {user?.role === 'admin' && (
-                                    <Link to={'/admin'} className={`border-b-2 ${location.pathname === '/admin' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Admin</Link>
-                                )}
+                                {navItems.map((item) => (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`border-b-2 ${location.pathname === item.path ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}
+                                    >
+                                        {item.label}
+                                    </Link>
+                                ))}
                             </nav>
                         </div>
                         <div className="lg:flex hidden items-center justify-end gap-2 border-">

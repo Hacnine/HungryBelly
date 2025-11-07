@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SectionHeader from '../../Common/SectionHeader';
 import Datepicker from 'react-tailwindcss-datepicker';
+import axiosInstance from '../../../api/axiosInstance';
 
 const BookingForm = () => {
   const [value, setValue] = useState({
@@ -42,39 +43,33 @@ const BookingForm = () => {
     const reservationDate = value.startDate;
 
     const formSubmission = {
-      ...formData,
+      name: formData.name,
+      email: formData.email,
       reservationDate: reservationDate || formData.reservationDate,
+      totalPeople: parseInt(formData.totalPeople),
+      message: formData.message,
     };
 
     try {
-      const response = await fetch("https://formspree.io/f/xgegevnr", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formSubmission)
-      });
+      const response = await axiosInstance.post('/reservations', formSubmission);
 
-      if (response.ok) {
-        setStatus({ submitted: true, success: true, error: false });
-        setFormData({
-          name: '',
-          email: '',
-          reservationDate: '',
-          totalPeople: '',
-          message: '',
-        });
-        setValue({ startDate: null, endDate: null });
-      } else {
-        setStatus({ submitted: true, success: false, error: true });
-      }
+      setStatus({ submitted: true, success: true, error: false });
+      setFormData({
+        name: '',
+        email: '',
+        reservationDate: '',
+        totalPeople: '',
+        message: '',
+      });
+      setValue({ startDate: null, endDate: null });
     } catch (error) {
+      console.error('Error submitting reservation:', error);
       setStatus({ submitted: true, success: false, error: true });
     }
   };
 
   return (
-    <div className="bg-booking bg-cover   text-white  pt-6 pb-14 ">
+    <div className="bg-[url('/background/table.jpg')] bg-cover bg-center text-white pt-6 pb-14">
       <div className="container mx-auto wrapper">
         <SectionHeader inspirationWord={"Book Now"} title={"BOOK YOUR TABLE"} />
 

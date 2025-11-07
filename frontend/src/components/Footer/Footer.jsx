@@ -27,7 +27,7 @@ const Footer = () => {
                         <img key={index} src={icon} alt={`social-icon-${index}`} />
                     ))}
                 </div>
-                <div className="text-white">© 2023 <span className=" text-yellow-400">Niomax</span> All Rights Reserved</div>
+                <div className="text-white">© 2025 All Rights Reserved</div>
                 </div>
             </footer>
 

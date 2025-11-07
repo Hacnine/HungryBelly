@@ -87,7 +87,7 @@ function ProductList() {
               placeholder="Search for food..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 -xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
 
@@ -97,7 +97,7 @@ function ProductList() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+              className="px-4 py-3 border border-gray-300 -xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
             >
               {categories.map((category) => (
                 <option key={category} value={category}>
@@ -113,7 +113,7 @@ function ProductList() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+              className="px-4 py-3 border border-gray-300 -xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
@@ -137,9 +137,10 @@ function ProductList() {
             return (
               <div
                 key={product.id}
-                className={`bg-white rounded-xl shadow-md overflow-hidden transform transition hover:scale-105 hover:shadow-xl ${
+                className={`bg-white -xl shadow-md overflow-hidden transform transition group hover:cursor-pointer hover:scale-105 hover:shadow-xl relative ${
                   !product.isActive ? 'opacity-60' : ''
                 }`}
+                onClick={() => handleProductClick(product)}
               >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
@@ -149,7 +150,7 @@ function ProductList() {
                     className="w-full h-full object-cover"
                   />
                   {product.discount > 0 && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 -full text-xs font-semibold">
                       {product.discount}% OFF
                     </div>
                   )}
@@ -159,7 +160,7 @@ function ProductList() {
                     </div>
                   )}
                   {/* Active/Inactive Status */}
-                  <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                  <div className={`absolute top-2 left-2 px-2 py-1 -full text-xs font-semibold ${
                     product.isActive
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-500 text-white'
@@ -183,7 +184,7 @@ function ProductList() {
                           e.stopPropagation();
                           handleToggleActive(product.id, product.isActive);
                         }}
-                        className={`p-1 rounded-full transition ${
+                        className={`p-1 -full transition ${
                           product.isActive
                             ? 'text-green-600 hover:bg-green-100'
                             : 'text-gray-400 hover:bg-gray-100'
@@ -206,7 +207,7 @@ function ProductList() {
                   </p>
 
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-600 rounded-full">
+                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-600 -full">
                       {product.category}
                     </span>
                     {product.preparationTime && (
@@ -222,7 +223,7 @@ function ProductList() {
                       {product.tags.slice(0, 2).map((tag, index) => (
                         <span
                           key={index}
-                          className="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full"
+                          className="text-xs px-2 py-1 bg-purple-100 text-purple-600 -full"
                         >
                           {tag}
                         </span>
@@ -254,7 +255,7 @@ function ProductList() {
 
                   {/* Click to view details */}
                   <div className="mt-3 text-center">
-                    <button
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleProductClick(product);
@@ -262,8 +263,14 @@ function ProductList() {
                       className="text-orange-500 hover:text-orange-600 text-sm font-medium underline"
                     >
                       View Details
-                    </button>
+                    </button> */}
                   </div>
+                </div>
+
+                {/* Hover overlay sliding from bottom */}
+                <div className="absolute -bottom-1 left-0 right-0 bg-customred flex items-center justify-center transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out h-[25%] flex-col">
+                  <span className='font-bebus text-yellow-500'>$ {finalPrice}</span>
+                  <span className="text-white font-bebus text-sm tracking-wider border-2 px-2 py-1">View Details</span>
                 </div>
               </div>
             );

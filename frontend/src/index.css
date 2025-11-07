@@ -42,7 +42,7 @@ body{
 
 /* Base class for shared styles */
 .input-base {
-  @apply w-full transition-all duration-1000 p-2 border border-gray-300 placeholder:pt-1.5 placeholder:text-xs font-medium placeholder:text-gray-300 resize-none focus:border-customred focus:outline-none;
+  @apply w-full transition-all duration-1000 p-2 border border-admin-orange placeholder:pt-1.5 placeholder:text-xs font-medium placeholder:text-gray-300 resize-none focus:border-customred focus:outline-none;
 }
 
 /* Extending .input from .input-base and adding unique properties */
