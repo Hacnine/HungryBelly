@@ -1,7 +1,9 @@
 
 import { useEffect } from "react"
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider, useAuth } from "./context/AuthContext"
+import { RouterProvider } from "react-router-dom"
+import { AuthProvider } from "./context/AuthContext"
+import { DeliveryAddressProvider } from "./context/DeliveryAddressContext"
+import { router } from "./routes/Routes"
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import LoginForm from "./components/LoginForm"
@@ -47,54 +49,10 @@ export default function App() {
     });
   }, []);
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/register" element={<RegisterForm />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/portfolio" element={<Portfolio />} />
-        <Route path="/client" element={<Clients />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/order" element={<OrderList />} />
-        <Route path="/admin" element={<AdminDashboardPage />} />
-
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/checkout"
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/order/:orderId"
-          element={
-            <ProtectedRoute>
-              <OrderTrackingPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requiredRole="user">
-              <AdminDashboardPage />
-            </ProtectedRoute>
-          }
-        /> */}
-      </Routes>
-      <Footer />
-    </Router>
+    <AuthProvider>
+      <DeliveryAddressProvider>
+        <RouterProvider router={router} />
+      </DeliveryAddressProvider>
+    </AuthProvider>
   )
 }

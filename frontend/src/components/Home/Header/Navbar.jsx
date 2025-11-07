@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import TotalOrder from '../../Common/TotalOrder';
 import { useOrder } from '../../../context/OrderContext';
 import { useAuth } from '../../../context/AuthContext';
+import { useDeliveryAddress } from '../../../context/DeliveryAddressContext';
+import { MapPin } from 'lucide-react';
 
 const Navbar = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,6 +15,7 @@ const Navbar = () => {
 
     const { orders } = useOrder();
     const { user } = useAuth();
+    const { currentAddress } = useDeliveryAddress();
     const location = useLocation(); // React Router hook to access the current location
 
 
@@ -67,6 +70,7 @@ const Navbar = () => {
                             <nav className="hidden text-lg lg:flex space-x-6">
                                 <Link to={'/'} className={`border-b-2 ${location.pathname === '/' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Home</Link>
                                 <Link to={'/about'} className={`border-b-2 ${location.pathname === '/about' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>About</Link>
+                                <Link to={'/products'} className={`border-b-2 ${location.pathname === '/products' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Menu</Link>
                                 <Link to={'/portfolio'} className={`border-b-2 ${location.pathname === '/portfolio' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Portfolio</Link>
                                 <Link to={'/client'} className={`border-b-2 ${location.pathname === '/client' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Clients</Link>
                                 <Link to={'/blog'} className={`border-b-2 ${location.pathname === '/blog' ? " border-yellow-400" : "text-white border-transparent"} hover:text-yellow-400 `}>Blog</Link>
@@ -84,6 +88,14 @@ const Navbar = () => {
                                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                     </svg>
                                     <span className="font-medium">{user.name}</span>
+                                </div>
+                            )}
+                            {currentAddress && (
+                                <div className="flex items-center gap-2 text-white mr-4 bg-white/10 px-3 py-2 rounded-lg">
+                                    <MapPin className="w-4 h-4" />
+                                    <span className="text-sm font-medium">
+                                        Delivering to: {currentAddress.label || 'Current Location'}
+                                    </span>
                                 </div>
                             )}
                             <TotalOrder />

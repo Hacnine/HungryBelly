@@ -94,3 +94,23 @@ model FoodItem {
   updatedAt     DateTime @updatedAt
 }
 
+model Address {
+  id          String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId      String   @db.ObjectId
+  type        String   @default("delivery") // delivery, billing, etc.
+  label       String   @default("Home") // Home, Work, Other
+  street      String
+  city        String
+  state       String?
+  zipCode     String?
+  country     String   @default("US")
+  latitude    Float?
+  longitude   Float?
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+

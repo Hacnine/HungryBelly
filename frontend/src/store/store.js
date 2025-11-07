@@ -8,6 +8,7 @@ import { authApi } from "./authApi";
 import { foodItemsApi } from "./foodItemsApi";
 import { ordersApi } from "./ordersApi";
 import { menuApi } from "./menuApi";
+import { addressesApi } from "./addressesApi";
 
 export const store = configureStore({
   reducer: {
@@ -20,11 +21,13 @@ export const store = configureStore({
     [foodItemsApi.reducerPath]: foodItemsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [menuApi.reducerPath]: menuApi.reducer,
+    [addressesApi.reducerPath]: addressesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(foodItemsApi.middleware)
       .concat(ordersApi.middleware)
-      .concat(menuApi.middleware),
+      .concat(menuApi.middleware)
+      .concat(addressesApi.middleware),
 });
