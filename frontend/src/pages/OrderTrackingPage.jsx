@@ -7,16 +7,16 @@ import { fetchOrderDetail } from "../store/orderSlice"
 import LiveOrderTracking from "../components/LiveOrderTracking"
 
 export default function OrderTrackingPage() {
-  const { orderId } = useParams()
+  const { orderIdentifier } = useParams()
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const { selectedOrder, loading } = useSelector((state) => state.order)
 
   useEffect(() => {
-    if (orderId) {
-      dispatch(fetchOrderDetail(orderId))
+    if (orderIdentifier) {
+      dispatch(fetchOrderDetail(orderIdentifier))
     }
-  }, [orderId, dispatch])
+  }, [orderIdentifier, dispatch])
 
   if (loading && !selectedOrder) {
     return (

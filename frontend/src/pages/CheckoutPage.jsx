@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
@@ -7,6 +5,7 @@ import { placeOrder } from "../store/orderSlice"
 import { clearCart } from "../store/cartSlice"
 import CheckoutForm from "../components/CheckoutForm"
 import { CouponInput } from "../components/CouponInput"
+import { useAuth } from "../context/AuthContext"
 
 export default function CheckoutPage() {
   const dispatch = useDispatch()
@@ -14,11 +13,19 @@ export default function CheckoutPage() {
   const { items, total } = useSelector((state) => state.cart)
   const { loading, selectedOrder } = useSelector((state) => state.order)
   const { applied: appliedCoupon } = useSelector((state) => state.coupons)
+  const { user } = useAuth()
+
   const [address, setAddress] = useState("")
   const [phone, setPhone] = useState("")
   const [notes, setNotes] = useState("")
   const [showPayment, setShowPayment] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
+
+  // Guest order fields
+  const [isGuestOrder, setIsGuestOrder] = useState(!user)
+  const [guestName, setGuestName] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
+  const [guestPhone, setGuestPhone] = useState("")
 
   if (items.length === 0) {
     return (
@@ -36,17 +43,37 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault()
 
+    // Validation
     if (!address || !phone) {
-      alert("Please fill in all fields")
+      alert("Please fill in delivery address and phone number")
       return
     }
 
-    const result = await dispatch(
-      placeOrder({
-        items,
-        total,
-      }),
-    )
+    if (isGuestOrder) {
+      if (!guestName || !guestEmail || !guestPhone) {
+        alert("Please fill in all guest information fields")
+        return
+      }
+    }
+
+    const orderData = {
+      items,
+      total,
+      deliveryAddress: { address, phone },
+      notes,
+      coupon: appliedCoupon
+    }
+
+    // Add guest information if it's a guest order
+    if (isGuestOrder) {
+      orderData.guestInfo = {
+        name: guestName,
+        email: guestEmail,
+        phone: guestPhone
+      }
+    }
+
+    const result = await dispatch(placeOrder(orderData))
 
     if (result.meta.requestStatus === "fulfilled") {
       setOrderPlaced(true)
@@ -56,7 +83,8 @@ export default function CheckoutPage() {
 
   const handlePaymentSuccess = () => {
     dispatch(clearCart())
-    navigate(`/order/${selectedOrder.id}`)
+    // Navigate to order tracking using order number for both users and guests
+    navigate(`/order/${selectedOrder.orderNumber}`)
   }
 
   const deliveryFee = 3.0
@@ -95,6 +123,56 @@ export default function CheckoutPage() {
                 </div>
 
                 <CouponInput orderTotal={total + deliveryFee + tax} onApply={() => {}} />
+
+                {/* Guest Information (only show if not logged in) */}
+                {!user && (
+                  <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-bold">Order as Guest</h2>
+                      <button
+                        onClick={() => navigate('/login')}
+                        className="text-blue-600 hover:text-blue-800 text-sm underline"
+                      >
+                        Sign in instead
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                        <input
+                          type="text"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          required
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          value={guestEmail}
+                          onChange={(e) => setGuestEmail(e.target.value)}
+                          required
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="john@example.com"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                        <input
+                          type="tel"
+                          value={guestPhone}
+                          onChange={(e) => setGuestPhone(e.target.value)}
+                          required
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="(555) 123-4567"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Delivery Info */}
                 <div className="bg-white rounded-lg shadow-md p-6 mt-6">

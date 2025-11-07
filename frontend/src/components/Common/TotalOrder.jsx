@@ -1,10 +1,16 @@
 import React from 'react'
-import { useOrder } from "../../context/OrderContext";
+import { useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
 
 const TotalOrder = () => {
-    const { orders } = useOrder();
+    const { items } = useSelector((state) => state.cart)
+    const navigate = useNavigate()
+
+    const handleClick = () => {
+        navigate('/checkout')
+    }
   return (
-   <div className={`relative w-fit ${orders.length === 0? 'hidden' : 'block'}`}>
+   <div className={`relative w-fit cursor-pointer ${items.length === 0? 'hidden' : 'block'}`} onClick={handleClick}>
      <svg
     fill="#000000"
     height="60px"
@@ -114,7 +120,7 @@ const TotalOrder = () => {
       </tspan>
     </text> */}
   </svg>
-  <span className="absolute  text-sm right-0 left-0 top-6 text-red-600 font-bold text-center  w-full">{orders.length}</span>
+  <span className="absolute  text-sm right-0 left-0 top-6 text-red-600 font-bold text-center  w-full">{items.length}</span>
 
    </div>
   )

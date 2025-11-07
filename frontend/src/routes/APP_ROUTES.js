@@ -12,5 +12,5 @@ export const APP_ROUTES = {
   admin: "/admin",
   profile: "/profile",
   checkout: "/checkout",
-  orderTracking: "/order/:orderId",
+  orderTracking: "/order/:orderIdentifier",
 };

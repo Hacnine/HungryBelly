@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import axiosInstance from "../api/axiosInstance"
 
-export const placeOrder = createAsyncThunk("order/placeOrder", async ({ items, total }, { rejectWithValue }) => {
+export const placeOrder = createAsyncThunk("order/placeOrder", async (orderData, { rejectWithValue }) => {
   try {
-    const { data } = await axiosInstance.post("/orders", { items, total })
+    const { data } = await axiosInstance.post("/orders", orderData)
     return data
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || "Failed to place order")
@@ -19,9 +19,11 @@ export const fetchUserOrders = createAsyncThunk("order/fetchUserOrders", async (
   }
 })
 
-export const fetchOrderDetail = createAsyncThunk("order/fetchOrderDetail", async (id, { rejectWithValue }) => {
+export const fetchOrderDetail = createAsyncThunk("order/fetchOrderDetail", async (orderIdentifier, { rejectWithValue }) => {
   try {
-    const { data } = await axiosInstance.get(`/orders/${id}`)
+    // Check if it's an order number (starts with ORD-) or ID
+    const endpoint = orderIdentifier.startsWith('ORD-') ? `/orders/track/${orderIdentifier}` : `/orders/${orderIdentifier}`
+    const { data } = await axiosInstance.get(endpoint)
     return data
   } catch (error) {
     return rejectWithValue(error.response?.data?.error || "Failed to fetch order")
