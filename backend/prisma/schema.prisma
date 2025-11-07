@@ -71,3 +71,58 @@ model Coupon {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model FoodItem {
+  id            String   @id @map("_id") @default(auto()) @db.ObjectId
+  name          String
+  description   String?
+  category      String
+  subcategory   String?
+  price         Float
+  discount      Float    @default(0)
+  ingredients   Json?    // Array of {name: String, quantity: String}
+  nutrition     Json?    // {calories: Number, protein: String, fat: String, carbs: String, sugar: String, fiber: String}
+  stock         Int      @default(0)
+  isAvailable   Boolean  @default(true)
+  image         String?
+  tags          String[] // Array of strings
+  preparationTime Int    @default(0)
+  shop          String?  @db.ObjectId
+  createdBy     String   @db.ObjectId
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Address {
+  id          String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId      String   @db.ObjectId
+  type        String   @default("delivery") // delivery, billing, etc.
+  label       String   @default("Home") // Home, Work, Other
+  street      String
+  city        String
+  state       String?
+  zipCode     String?
+  country     String   @default("US")
+  latitude    Float?
+  longitude   Float?
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Reservation {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  name            String
+  email           String
+  reservationDate DateTime
+  totalPeople     Int
+  message         String?
+  status          String   @default("pending") // pending, confirmed, cancelled
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

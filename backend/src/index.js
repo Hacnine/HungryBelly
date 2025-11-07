@@ -12,6 +12,9 @@ import adminRoutes from "./routes/admin.js"
 import paymentRoutes from "./routes/payments.js"
 import driverRoutes from "./routes/drivers.js"
 import couponRoutes from "./routes/coupons.js"
+import foodItemRoutes from "./routes/foodItems.js"
+import addressRoutes from "./routes/addresses.js"
+import reservationRoutes from "./routes/reservations.js"
 import {
   emitOrderUpdate,
   emitDriverLocation,
@@ -47,6 +50,9 @@ app.use("/admin", adminRoutes)
 app.use("/payments", paymentRoutes)
 app.use("/drivers", driverRoutes)
 app.use("/coupons", couponRoutes)
+app.use("/food-items", foodItemRoutes)
+app.use("/addresses", addressRoutes)
+app.use("/reservations", reservationRoutes)
 
 app.get("/health", (req, res) => res.json({ ok: true }))
 
