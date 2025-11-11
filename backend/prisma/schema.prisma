@@ -8,45 +8,175 @@ datasource db {
 }
 
 model User {
-  id         String   @id @map("_id") @default(auto()) @db.ObjectId
-  name       String
-  email      String   @unique
-  password   String
-  role       String   @default("user")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  name            String
+  email           String   @unique
+  password        String
+  phone           String?
+  role            String   @default("user") // user, admin, restaurant_owner, driver
+  profileImage    String?
+  dateOfBirth     DateTime?
+  emailVerified   Boolean  @default(false)
+  phoneVerified   Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  lastLogin       DateTime?
+  
+  // Loyalty & Rewards
+  loyaltyPoints   Int      @default(0)
+  loyaltyTier     String   @default("Bronze") // Bronze, Silver, Gold, Platinum
+  referralCode    String   @unique
+  referredBy      String?  @db.ObjectId
+  
+  // Wallet
+  walletBalance   Float    @default(0)
+  
+  // Preferences
+  preferences     Json?    // {dietary, favoriteRestaurants[], favoriteItems[], notifications}
+  
+  // Social
+  socialLogin     Json?    // {provider, providerId}
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orders          Order[]  @relation("UserOrders")
+  reviews         Review[] @relation("UserReviews")
+  addresses       Address[] @relation("UserAddresses")
+  notifications   Notification[] @relation("UserNotifications")
+  walletTransactions WalletTransaction[] @relation("UserWalletTransactions")
+  favoriteRestaurants FavoriteRestaurant[] @relation("UserFavorites")
 }
 
 model Order {
-  id         String   @id @map("_id") @default(auto()) @db.ObjectId
-  userId     String?  @db.ObjectId
-  guestInfo  Json?    // For guest orders: {name, email, phone}
-  items      Json
-  total      Float
-  status     String   @default("placed")
-  steps      Json
-  coupons    Json?
-  paid       Boolean  @default(false)
-  driverId   String?  @db.ObjectId
-  deliveryAddress Json? // For delivery address
-  notes      String?
-  orderNumber String  @unique // Public order number for tracking
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String?  @db.ObjectId
+  restaurantId    String   @db.ObjectId
+  driverId        String?  @db.ObjectId
+  
+  // Order Details
+  orderNumber     String   @unique // Public order number for tracking
+  items           Json     // [{foodItemId, name, quantity, price, addons, specialInstructions}]
+  
+  // Pricing
+  subtotal        Float
+  deliveryFee     Float    @default(0)
+  serviceFee      Float    @default(0)
+  tax             Float    @default(0)
+  discount        Float    @default(0)
+  tip             Float    @default(0)
+  total           Float
+  
+  // Payment
+  paymentMethod   String   @default("card") // card, cash, wallet, upi
+  paymentStatus   String   @default("pending") // pending, completed, failed, refunded
+  transactionId   String?
+  paid            Boolean  @default(false)
+  
+  // Order Status & Tracking
+  status          String   @default("placed") // placed, confirmed, preparing, ready, picked_up, on_the_way, delivered, cancelled
+  steps           Json     // [{step, timestamp, message, location?}]
+  estimatedDeliveryTime DateTime?
+  actualDeliveryTime    DateTime?
+  
+  // Delivery Details
+  deliveryAddress Json?    // {street, city, state, zipCode, latitude, longitude}
+  deliveryInstructions String?
+  contactless     Boolean  @default(false)
+  
+  // Guest Order Support
+  guestInfo       Json?    // {name, email, phone}
+  
+  // Additional Info
+  notes           String?
+  coupons         Json?    // {code, discountAmount}
+  scheduledFor    DateTime? // For scheduled orders
+  
+  // Ratings & Reviews
+  restaurantRating Float?
+  driverRating     Float?
+  reviewed         Boolean  @default(false)
+  
+  // Cancellation
+  cancelledAt     DateTime?
+  cancelledBy     String?  // user, restaurant, driver, system
+  cancellationReason String?
+  refundAmount    Float?
+  refundStatus    String?  // pending, completed, rejected
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User?    @relation("UserOrders", fields: [userId], references: [id])
+  restaurant      Restaurant @relation("RestaurantOrders", fields: [restaurantId], references: [id])
+  driver          Driver?  @relation("DriverOrders", fields: [driverId], references: [id])
+  
+  @@index([userId])
+  @@index([restaurantId])
+  @@index([driverId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Driver {
-  id         String   @id @map("_id") @default(auto()) @db.ObjectId
-  name       String
-  email      String   @unique
-  phone      String
-  vehicle    String?
-  licensePlate String?
-  rating     Float    @default(5.0)
-  available  Boolean  @default(true)
-  currentOrderId String? @db.ObjectId
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String?  @db.ObjectId // Link to User account if driver also has user account
+  
+  // Personal Info
+  name            String
+  email           String   @unique
+  phone           String   @unique
+  profileImage    String?
+  dateOfBirth     DateTime?
+  
+  // Vehicle Info
+  vehicle         String?  // Car, Bike, Scooter
+  vehicleModel    String?
+  vehicleColor    String?
+  licensePlate    String?  @unique
+  
+  // Documents
+  driverLicense   String?  // Document URL
+  vehicleRegistration String?
+  insurance       String?
+  documentsVerified Boolean @default(false)
+  
+  // Status & Availability
+  available       Boolean  @default(true)
+  onlineStatus    String   @default("offline") // online, offline, busy
+  currentLocation Json?    // {latitude, longitude, address, lastUpdated}
+  currentOrderId  String?  @db.ObjectId
+  
+  // Performance Metrics
+  rating          Float    @default(5.0)
+  totalRatings    Int      @default(0)
+  totalOrders     Int      @default(0)
+  completedOrders Int      @default(0)
+  cancelledOrders Int      @default(0)
+  acceptanceRate  Float    @default(100)
+  
+  // Earnings
+  totalEarnings   Float    @default(0)
+  pendingEarnings Float    @default(0)
+  availableBalance Float   @default(0)
+  
+  // Work Schedule
+  workingHours    Json?    // {monday: {start, end}, ...}
+  preferredZones  String[] // Array of delivery zone IDs
+  
+  // Account Status
+  isActive        Boolean  @default(true)
+  isVerified      Boolean  @default(false)
+  joinedAt        DateTime @default(now())
+  lastActiveAt    DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orders          Order[]  @relation("DriverOrders")
+  earnings        DriverEarning[] @relation("DriverEarnings")
+  
+  @@index([available])
+  @@index([onlineStatus])
 }
 
 model Menu {
@@ -77,25 +207,73 @@ model Coupon {
 }
 
 model FoodItem {
-  id            String   @id @map("_id") @default(auto()) @db.ObjectId
-  name          String
-  description   String?
-  category      String
-  subcategory   String?
-  price         Float
-  discount      Float    @default(0)
-  ingredients   Json?    // Array of {name: String, quantity: String}
-  nutrition     Json?    // {calories: Number, protein: String, fat: String, carbs: String, sugar: String, fiber: String}
-  stock         Int      @default(0)
-  isAvailable   Boolean  @default(true)
-  image         String?
-  tags          String[] // Array of strings
-  preparationTime Int    @default(0)
-  shop          String?  @db.ObjectId
-  createdBy     String   @db.ObjectId
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  restaurantId    String   @db.ObjectId
+  createdBy       String   @db.ObjectId
+  
+  // Basic Info
+  name            String
+  description     String?
+  image           String?
+  images          String[] // Multiple images
+  
+  // Categorization
+  category        String
+  subcategory     String?
+  tags            String[] // [spicy, vegan, gluten-free, etc.]
+  cuisine         String?
+  
+  // Pricing
+  price           Float
+  originalPrice   Float?
+  discount        Float    @default(0)
+  isOnSale        Boolean  @default(false)
+  
+  // Nutritional Info
+  nutrition       Json?    // {calories, protein, fat, carbs, sugar, fiber, sodium}
+  ingredients     Json?    // [{name, quantity, isAllergen}]
+  allergens       String[] // [nuts, dairy, gluten, etc.]
+  
+  // Dietary Preferences
+  isVegetarian    Boolean  @default(false)
+  isVegan         Boolean  @default(false)
+  isGlutenFree    Boolean  @default(false)
+  isHalal         Boolean  @default(false)
+  spiceLevel      String?  // mild, medium, hot, very_hot
+  
+  // Availability & Stock
+  stock           Int      @default(0)
+  isAvailable     Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  
+  // Preparation
+  preparationTime Int      @default(15) // in minutes
+  servingSize     String?  // 1 person, 2-3 people, etc.
+  
+  // Addons & Customization
+  addons          Json?    // [{id, name, price, category}]
+  customizations  Json?    // [{id, name, options: [{name, price}]}]
+  
+  // Ratings
+  rating          Float    @default(4.0)
+  totalRatings    Int      @default(0)
+  
+  // Popular & Featured
+  isFeatured      Boolean  @default(false)
+  isPopular       Boolean  @default(false)
+  orderCount      Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  restaurant      Restaurant @relation("RestaurantFoodItems", fields: [restaurantId], references: [id])
+  
+  @@index([restaurantId])
+  @@index([category])
+  @@index([isAvailable])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([rating])
 }
 
 model Address {
@@ -104,18 +282,24 @@ model Address {
   type        String   @default("delivery") // delivery, billing, etc.
   label       String   @default("Home") // Home, Work, Other
   street      String
+  apartment   String?
   city        String
   state       String?
   zipCode     String?
   country     String   @default("US")
   latitude    Float?
   longitude   Float?
+  landmark    String?
+  deliveryInstructions String?
   isDefault   Boolean  @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  user        User     @relation("UserAddresses", fields: [userId], references: [id])
+
   @@index([userId])
+  @@index([isDefault])
 }
 
 model Reservation {
@@ -128,5 +312,396 @@ model Reservation {
   status          String   @default("pending") // pending, confirmed, cancelled
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ============= RESTAURANT MODELS =============
+
+model Restaurant {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  ownerId         String   @db.ObjectId
+  
+  // Basic Info
+  name            String
+  slug            String   @unique
+  description     String?
+  logo            String?
+  coverImage      String?
+  
+  // Contact & Location
+  phone           String
+  email           String
+  address         Json     // {street, city, state, zipCode, country, latitude, longitude}
+  
+  // Business Info
+  cuisine         String[] // [Italian, Chinese, Indian, etc.]
+  priceRange      String   @default("$$") // $, $$, $$$, $$$$
+  isVegetarian    Boolean  @default(false)
+  isVegan         Boolean  @default(false)
+  isHalal         Boolean  @default(false)
+  
+  // Operating Hours
+  operatingHours  Json     // {monday: {open, close, isOpen}, ...}
+  deliveryHours   Json?
+  
+  // Ratings & Reviews
+  rating          Float    @default(4.0)
+  totalRatings    Int      @default(0)
+  totalReviews    Int      @default(0)
+  
+  // Delivery Info
+  deliveryFee     Float    @default(2.99)
+  minOrderAmount  Float    @default(10)
+  maxDeliveryDistance Float @default(5) // in km
+  avgDeliveryTime Int      @default(30) // in minutes
+  deliveryZones   String[] // Array of zone IDs
+  
+  // Features
+  features        String[] // [Free WiFi, Outdoor Seating, Parking, etc.]
+  tags            String[] // [Fast Food, Family Friendly, etc.]
+  
+  // Business Metrics
+  totalOrders     Int      @default(0)
+  completedOrders Int      @default(0)
+  cancelledOrders Int      @default(0)
+  totalRevenue    Float    @default(0)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  isVerified      Boolean  @default(false)
+  isFeatured      Boolean  @default(false)
+  isOpen          Boolean  @default(true)
+  
+  // Documents
+  businessLicense String?
+  foodLicense     String?
+  taxId           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  foodItems       FoodItem[] @relation("RestaurantFoodItems")
+  orders          Order[]  @relation("RestaurantOrders")
+  reviews         Review[] @relation("RestaurantReviews")
+  promotions      Promotion[] @relation("RestaurantPromotions")
+  favorites       FavoriteRestaurant[] @relation("RestaurantFavorites")
+  
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([rating])
+}
+
+// ============= REVIEW & RATING MODELS =============
+
+model Review {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String   @db.ObjectId
+  restaurantId    String?  @db.ObjectId
+  orderId         String?  @db.ObjectId
+  driverId        String?  @db.ObjectId
+  
+  // Ratings (1-5)
+  rating          Float
+  foodRating      Float?
+  serviceRating   Float?
+  deliveryRating  Float?
+  
+  // Review Content
+  title           String?
+  comment         String?
+  images          String[] // Array of image URLs
+  
+  // Response
+  response        String?
+  respondedAt     DateTime?
+  
+  // Status
+  isVerified      Boolean  @default(false)
+  isHelpful       Int      @default(0)
+  isReported      Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation("UserReviews", fields: [userId], references: [id])
+  restaurant      Restaurant? @relation("RestaurantReviews", fields: [restaurantId], references: [id])
+  
+  @@index([userId])
+  @@index([restaurantId])
+  @@index([orderId])
+  @@index([rating])
+}
+
+// ============= NOTIFICATION MODELS =============
+
+model Notification {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String   @db.ObjectId
+  
+  // Notification Details
+  type            String   // order_update, promotion, delivery, payment, etc.
+  title           String
+  message         String
+  data            Json?    // Additional data like orderId, restaurantId, etc.
+  
+  // Delivery Channels
+  channels        String[] // [push, email, sms, in_app]
+  
+  // Status
+  isRead          Boolean  @default(false)
+  readAt          DateTime?
+  isSent          Boolean  @default(false)
+  sentAt          DateTime?
+  
+  // Priority
+  priority        String   @default("normal") // low, normal, high, urgent
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation("UserNotifications", fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ============= WALLET & TRANSACTION MODELS =============
+
+model WalletTransaction {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String   @db.ObjectId
+  
+  // Transaction Details
+  type            String   // credit, debit, refund, cashback, referral_bonus
+  amount          Float
+  balanceBefore   Float
+  balanceAfter    Float
+  
+  // Reference
+  orderId         String?  @db.ObjectId
+  referenceId     String?
+  description     String
+  
+  // Status
+  status          String   @default("completed") // pending, completed, failed, reversed
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation("UserWalletTransactions", fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============= LOYALTY & REWARDS MODELS =============
+
+model LoyaltyTransaction {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String   @db.ObjectId
+  
+  // Points
+  pointsEarned    Int      @default(0)
+  pointsRedeemed  Int      @default(0)
+  pointsBalance   Int
+  
+  // Transaction Details
+  type            String   // order, referral, bonus, redemption
+  orderId         String?  @db.ObjectId
+  description     String
+  
+  // Multiplier (for special events)
+  multiplier      Float    @default(1)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Promotion {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  restaurantId    String?  @db.ObjectId
+  
+  // Promotion Details
+  title           String
+  description     String
+  image           String?
+  promoCode       String?  @unique
+  
+  // Discount
+  discountType    String   // percentage, fixed, bogo, free_delivery
+  discountValue   Float
+  maxDiscount     Float?
+  
+  // Conditions
+  minOrderAmount  Float    @default(0)
+  maxUsesPerUser  Int      @default(1)
+  totalMaxUses    Int?
+  usedCount       Int      @default(0)
+  
+  // Target Audience
+  targetUserTier  String[] // [Bronze, Silver, Gold, Platinum, All]
+  isGlobal        Boolean  @default(false)
+  
+  // Validity
+  startDate       DateTime
+  endDate         DateTime
+  
+  // Status
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  restaurant      Restaurant? @relation("RestaurantPromotions", fields: [restaurantId], references: [id])
+  
+  @@index([isActive])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model FavoriteRestaurant {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId          String   @db.ObjectId
+  restaurantId    String   @db.ObjectId
+  
+  createdAt       DateTime @default(now())
+
+  user            User     @relation("UserFavorites", fields: [userId], references: [id])
+  restaurant      Restaurant @relation("RestaurantFavorites", fields: [restaurantId], references: [id])
+  
+  @@unique([userId, restaurantId])
+  @@index([userId])
+  @@index([restaurantId])
+}
+
+// ============= DRIVER EARNINGS MODELS =============
+
+model DriverEarning {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  driverId        String   @db.ObjectId
+  orderId         String   @db.ObjectId
+  
+  // Earnings Breakdown
+  baseEarning     Float
+  distanceEarning Float    @default(0)
+  timeEarning     Float    @default(0)
+  tip             Float    @default(0)
+  bonus           Float    @default(0)
+  totalEarning    Float
+  
+  // Commission
+  platformFee     Float
+  netEarning      Float
+  
+  // Payment
+  paymentStatus   String   @default("pending") // pending, completed, on_hold
+  paidAt          DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  driver          Driver   @relation("DriverEarnings", fields: [driverId], references: [id])
+  
+  @@index([driverId])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+// ============= INVENTORY & STOCK MODELS =============
+
+model Inventory {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  foodItemId      String   @db.ObjectId
+  restaurantId    String   @db.ObjectId
+  
+  // Stock Info
+  quantity        Int      @default(0)
+  lowStockThreshold Int    @default(10)
+  unit            String   @default("pieces")
+  
+  // Tracking
+  lastRestocked   DateTime?
+  lastUpdated     DateTime @updatedAt
+  
+  // Alerts
+  isLowStock      Boolean  @default(false)
+  isOutOfStock    Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([foodItemId, restaurantId])
+  @@index([restaurantId])
+  @@index([isLowStock])
+  @@index([isOutOfStock])
+}
+
+// ============= ANALYTICS MODELS =============
+
+model Analytics {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  
+  // Time Period
+  date            DateTime
+  period          String   // daily, weekly, monthly
+  
+  // Revenue Metrics
+  totalRevenue    Float    @default(0)
+  totalOrders     Int      @default(0)
+  avgOrderValue   Float    @default(0)
+  
+  // User Metrics
+  newUsers        Int      @default(0)
+  activeUsers     Int      @default(0)
+  returningUsers  Int      @default(0)
+  
+  // Restaurant Metrics
+  activeRestaurants Int    @default(0)
+  topRestaurants  Json?    // [{restaurantId, name, revenue, orders}]
+  
+  // Driver Metrics
+  activeDrivers   Int      @default(0)
+  avgDeliveryTime Float    @default(0)
+  
+  // Popular Items
+  topFoodItems    Json?    // [{foodItemId, name, orderCount}]
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([date, period])
+  @@index([date])
+  @@index([period])
+}
+
+// ============= DELIVERY ZONE MODELS =============
+
+model DeliveryZone {
+  id              String   @id @map("_id") @default(auto()) @db.ObjectId
+  
+  // Zone Details
+  name            String
+  code            String   @unique
+  city            String
+  
+  // Geographic Boundaries
+  boundaries      Json     // GeoJSON polygon
+  center          Json     // {latitude, longitude}
+  
+  // Pricing
+  deliveryFee     Float
+  surgeMultiplier Float    @default(1)
+  
+  // Status
+  isActive        Boolean  @default(true)
+  isSurgeActive   Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([city])
+  @@index([isActive])
 }
 
