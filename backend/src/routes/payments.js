@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client"
 import { authenticate } from "../middlewares/auth.js"
 import { sendOrderConfirmationEmail } from "../utils/email.js"
 
-const stripeInstance = stripe(process.env.STRIPE_SECRET_KEY)
+const stripeInstance = process.env.STRIPE_SECRET_KEY ? stripe(process.env.STRIPE_SECRET_KEY) : null
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -12,6 +12,10 @@ const prisma = new PrismaClient()
 // Create payment intent
 router.post("/create-payment-intent", authenticate, async (req, res) => {
   try {
+    if (!stripeInstance) {
+      return res.status(503).json({ error: "Payment service not configured" })
+    }
+
     const { orderId, amount } = req.body
 
     if (!orderId || !amount) {
@@ -42,6 +46,10 @@ router.post("/create-payment-intent", authenticate, async (req, res) => {
 
 // Webhook handler for Stripe events
 router.post("/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+  if (!stripeInstance) {
+    return res.status(503).json({ error: "Payment service not configured" })
+  }
+
   const sig = req.headers["stripe-signature"]
   let event
 
